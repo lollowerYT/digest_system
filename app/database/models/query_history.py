@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.database.database import Base
 from app.utils.time_utils import utc_now
 
+
 class QueryHistory(Base):
     __tablename__ = "query_history"
 

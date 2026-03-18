@@ -6,6 +6,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Integer,
     String, 
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -13,6 +14,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from app.database.database import Base
 from app.utils.time_utils import utc_now
+
 
 class UserRole(enum.Enum):
     USER = "USER"
@@ -26,6 +28,7 @@ class User(Base):
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     first_name: Mapped[str | None] = mapped_column(String(64), nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.USER, nullable=False)
+    token_balance: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     subscription_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("subscriptions.id"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now, onupdate=utc_now)

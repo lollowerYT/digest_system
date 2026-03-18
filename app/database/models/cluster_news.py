@@ -3,8 +3,8 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
-
 from app.database.database import Base
+
 
 class ClusterNews(Base):
     __tablename__ = "cluster_news"

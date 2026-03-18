@@ -7,6 +7,7 @@ from sqlalchemy.dialects.postgresql import UUID, ARRAY, FLOAT
 from app.database.database import Base
 from app.utils.time_utils import utc_now
 
+
 class Embedding(Base):
     __tablename__ = "embeddings"
 
