@@ -18,3 +18,13 @@ class Cluster(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     digest: Mapped["Digest"] = relationship("Digest", back_populates="clusters")
+    cluster_news: Mapped[list["ClusterNews"]] = relationship(
+        "ClusterNews",
+        back_populates="cluster",
+        cascade="all, delete-orphan"
+    )
+    embedding_projections: Mapped[list["EmbeddingProjection"]] = relationship(
+        "EmbeddingProjection",
+        back_populates="cluster",
+        cascade="all, delete-orphan"
+    )

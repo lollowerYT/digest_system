@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dao.base import BaseDAO
-from app.database.models.subsription import Subscription
+from app.database.models.subscription import Subscription
 
 
 class SubscriptionDAO(BaseDAO):

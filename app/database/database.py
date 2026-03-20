@@ -15,7 +15,7 @@ engine = create_async_engine(
 
 # Создатель сессий
 async_session_maker = async_sessionmaker(
-    engine=engine,
+    engine,
     expire_on_commit=False,
 )
 

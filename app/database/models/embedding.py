@@ -17,3 +17,4 @@ class Embedding(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now)
 
     news: Mapped["News"] = relationship("News", back_populates="embedding")
+    

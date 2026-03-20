@@ -19,4 +19,9 @@ class News(Base):
     created_at: Mapped[datetime] = mapped_column(default=utc_now)
 
     channel: Mapped["TelegramChannel"] = relationship("TelegramChannel", back_populates="news")
-    digests: Mapped[list["Digest"]] = relationship("Digest", back_populates="news")
+    embedding: Mapped["Embedding"] = relationship("Embedding", back_populates="news", uselist=False)
+    embedding_projection: Mapped["EmbeddingProjection"] = relationship(
+        "EmbeddingProjection",
+        back_populates="news",
+        uselist=False  # one-to-one
+    )

@@ -13,7 +13,7 @@ sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 from app.database.database import Base, DATABASE_URL
 
 from app.database.models.user import User
-from app.database.models.subsription import Subscription
+from app.database.models.subscription import Subscription
 from app.database.models.token_transaction import TokenTransaction
 from app.database.models.query_history import QueryHistory
 from app.database.models.favorite_digest import FavoriteDigest

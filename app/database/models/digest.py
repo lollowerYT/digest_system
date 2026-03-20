@@ -24,4 +24,4 @@ class Digest(Base):
 
     user: Mapped["User"] = relationship("User", back_populates="digests")
     clusters: Mapped[list["Cluster"]] = relationship("Cluster", back_populates="digest", cascade="all, delete-orphan")
-    news: Mapped[list["News"]] = relationship("News", back_populates="digests")
+    
