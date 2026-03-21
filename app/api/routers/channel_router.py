@@ -1,14 +1,16 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.schemas.channel import STelegramChannel
+from app.api.schemas.channel import STelegramChannel, SChannelAdd
 from app.dao.channel import TelegramChannelDAO
 from app.dao.user_channel import UserTelegramChannelDAO
 from app.database.database import get_session
 from app.database.models.user import User
 from app.utils.admin.dependencies import get_admin
 from app.utils.auth.dependencies import get_current_user
+from app.api.dependencies import get_collector
+from app.processing.services.telegram_collector import TelegramCollector
 
 
 router = APIRouter(prefix="/channels", tags=["channels"])
@@ -25,12 +27,46 @@ async def get_user_channels(
 
 
 @router.post("/channels")
-async def add_user_channel():
-    # 1) Сделать проверку на наличие данного канала в бд
-    # 2) Если нет, то достать информацию о нем и записать в бд, 
-    #    а после создать запись в many-to-many таблице user_telegram_channel
-    # 3) Вернуть сообщение об успехе, если такой канал существует и был добавлен
-    pass
+async def add_user_channel(
+    data: SChannelAdd,
+    user: User = Depends(get_current_user),
+    collector: TelegramCollector = Depends(get_collector),
+    session: AsyncSession = Depends(get_session)
+):
+    # 1. Проверяем существование канала через Telethon
+    try:
+        entity = await collector.get_entity(data.link)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Channel not found")
+
+    # 2. Находим или создаём канал в БД
+    channel_dao = TelegramChannelDAO(session)
+    channel = await channel_dao.get_by_telegram_id(entity.id)
+    
+    if not channel:
+        # Используем метод create из DAO (он уже добавляет в сессию)
+        channel = await channel_dao.create(
+            telegram_id=entity.id,
+            name=entity.title,
+            username=data.link,
+            is_active=True
+        )
+        await session.flush()
+
+    # 3. Проверяем, не добавлен ли уже этот канал пользователем
+    user_channel_dao = UserTelegramChannelDAO(session)
+    user_channels = await user_channel_dao.get_user_channels(user.id)
+    
+    # Проверяем, есть ли канал в списке
+    for uc in user_channels:
+        if uc.id == channel.id:
+            raise HTTPException(status_code=400, detail="Channel already added")
+
+    # 4. Создаём связь
+    await user_channel_dao.create(user_id=user.id, channel_id=channel.id)
+    await session.commit()
+
+    return {"status": "ok", "channel": STelegramChannel.model_validate(channel)}
 
 
 @router.delete("/channels/{channel_id}")
@@ -52,3 +88,4 @@ async def get_all_channels(
     channel_dao = TelegramChannelDAO(session)
     channels = await channel_dao.get_all()
     return [STelegramChannel.model_validate(channel) for channel in channels]
+

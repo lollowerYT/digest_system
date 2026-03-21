@@ -46,3 +46,12 @@ urllib3==2.6.3
 uvicorn==0.41.0
 watchfiles==1.1.1
 websockets==16.0
+celery
+redis
+telethon
+torch
+transformers
+scikit-learn
+umap-learn
+soundfile
+aiohttp
