@@ -10,3 +10,7 @@ class SUserProfile(BaseModel):
     token_balance: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class SUpdateUserTokens(BaseModel):
+    tokens: int
