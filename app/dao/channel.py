@@ -9,7 +9,7 @@ class TelegramChannelDAO(BaseDAO):
         super().__init__(session, TelegramChannel)
         
     async def get_by_telegram_id(self, telegram_id: int):
-        return self.get_one_or_none(telegram_id=telegram_id)
+        return await self.get_one_or_none(telegram_id=telegram_id)
 
     async def get_by_username(self, username: str):
-        return self.get_one_or_none(link=username)
+        return await self.get_one_or_none(link=username)
