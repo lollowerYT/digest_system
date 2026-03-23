@@ -15,13 +15,13 @@ class Settings(BaseSettings):
     API_HASH: str
     PHONE_NUMBER: str
 
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
+    REDIS_HOST: str
+    REDIS_PORT: int
 
-    OLLAMA_HOST: str = "http://localhost:11434"
-    SAIGA_MODEL: str = "saiga"
+    OLLAMA_HOST: str
+    SAIGA_MODEL: str
 
-    AUDIO_STORAGE_PATH: str = "storage/audio"
+    AUDIO_STORAGE_PATH: str
 
     @property
     def DATABASE_URL(self):
