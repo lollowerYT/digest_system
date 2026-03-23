@@ -23,8 +23,9 @@ async def add_digest(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    if user.token_balance <= 0:
-        raise HTTPException(status_code=402, detail="Insufficient tokens")
+    required_tokens = 5 if data.output_format == 'audio' else 1
+    if user.token_balance < required_tokens:
+        raise HTTPException(status_code=402, detail=f"Insufficient tokens. Need {required_tokens} tokens for {data.output_format} format.")
 
     # Если каналы не указаны, подгружаем из БД
     if not data.channels or len(data.channels) == 0:

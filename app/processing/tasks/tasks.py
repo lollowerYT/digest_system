@@ -235,16 +235,21 @@ async def _generate_digest_async(
     # 11. Генерация аудио
     audio_path = None
     if request_data['output_format'] == 'audio' and digest_text:
-        logger.info(f"🔊 Генерация аудио для дайджеста {digest_id}")
-        audio_path = await _tts_service.generate_audio(digest_id, digest_text)
-        if audio_path:
-            logger.info(f"🎵 Аудио сохранено: {audio_path}")
-        else:
-            logger.warning(f"⚠️ Не удалось сгенерировать аудио")
+        logger.info(f"🔊 Генерация аудио для дайджеста {digest_id}, текст: {len(digest_text)} символов")
+        try:
+            audio_path = await _tts_service.generate_audio(digest_id, digest_text)
+            if audio_path:
+                logger.info(f"🎵 Аудио сохранено: {audio_path}")
+            else:
+                logger.warning(f"⚠️ Не удалось сгенерировать аудио: вернулся None")
+        except Exception as e:
+            logger.error(f"❌ Исключение при генерации аудио: {e}", exc_info=True)
+            audio_path = None
 
-    # 12. Списание токенов
-    await deduct_tokens(user_id, 1, f"Дайджест {digest_id}")
-    logger.info(f"💰 Списано 1 токен у пользователя {user_id}")
+    # 12. Списание токенов (разная стоимость для текста и аудио)
+    token_cost = 5 if request_data['output_format'] == 'audio' else 1
+    await deduct_tokens(user_id, token_cost, f"Дайджест {digest_id} (формат {request_data['output_format']})")
+    logger.info(f"💰 Списано {token_cost} токенов у пользователя {user_id} за дайджест в формате {request_data['output_format']}")
 
     # 13. Сохранение в историю
     await save_query_history(user_id, digest_id, request_data)

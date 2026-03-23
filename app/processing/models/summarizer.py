@@ -30,7 +30,7 @@ class SaigaSummarizer:
                             "stream": False,
                             "options": {"temperature": temperature, "max_tokens": max_tokens}
                         }
-                        async with session.post(f"{self.host}/api/generate", json=payload, timeout=60) as resp:
+                        async with session.post(f"{self.host}/api/generate", json=payload, timeout=180) as resp:
                             if resp.status != 200:
                                 text = await resp.text()
                                 raise Exception(f"Ollama error {resp.status}: {text}")
@@ -61,7 +61,7 @@ class SaigaSummarizer:
 
 {combined_text}"""
         prompt = self._create_prompt(system_msg, user_msg)
-        return await self._call_ollama(prompt, temperature=0.3, max_tokens=500)
+        return await self._call_ollama(prompt, temperature=0.3, max_tokens=800)
 
     async def generate_title(self, cluster_news: List[str]) -> str:
         if not cluster_news:
