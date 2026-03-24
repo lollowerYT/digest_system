@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>📊 Регистрации</h2>
+<canvas id="registrationsChart"></canvas>
+
+<h2>👤 Активность пользователей</h2>
+<canvas id="activityChart"></canvas>
+
+<h2>⚙️ Системные метрики</h2>
+<canvas id="systemChart"></canvas>
+
+<script>
+async function fetchData(url) {
+    const res = await fetch(url);
+    return await res.json();
+}
+
+async function loadRegistrations() {
+    const data = await fetchData("/admin/stats/registrations?date_from=2026-03-01 00:00:00&date_to=2026-03-24 00:00:00");
+
+    const labels = data.items.map(x => x.period);
+    const values = data.items.map(x => x.registrations);
+
+    new Chart(document.getElementById("registrationsChart"), {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Регистрации",
+                data: values
+            }]
+        }
+    });
+}
+
+async function loadActivity() {
+    const data = await fetchData("/admin/stats/activity?date_from=2026-03-0 00:00:001&date_to=2026-03-24 00:00:00");
+
+    const labels = data.items.map(x => x.user_id);
+    const values = data.items.map(x => x.requests_count);
+
+    new Chart(document.getElementById("activityChart"), {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Запросы",
+                data: values
+            }]
+        }
+    });
+}
+
+async function loadSystem() {
+    const data = await fetchData("/admin/stats/metrics?date_from=2026-03-01 00:00:00&date_to=2026-03-24 00:00:00");
+
+    new Chart(document.getElementById("systemChart"), {
+        type: "bar",
+        data: {
+            labels: ["Requests", "Errors"],
+            datasets: [{
+                label: "Система",
+                data: [data.total_requests, data.errors]
+            }]
+        }
+    });
+}
+
+
+loadRegistrations();
+loadActivity();
+loadSystem();
+</script>
+
+</body>
+</html>

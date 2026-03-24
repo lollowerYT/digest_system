@@ -62,3 +62,9 @@ async def index():
     </body>
     </html>
     """
+
+
+@router.get("/dashboard", response_class=HTMLResponse)
+async def admin_dashboard():
+    with open("app/templates/admin_dashboard.html", "r", encoding="utf-8") as f:
+        return f.read()

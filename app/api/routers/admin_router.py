@@ -48,7 +48,7 @@ async def set_user_tokens(
     await session.commit()
 
 
-@router.get("/stats/activity/{date_from}/{date_to}/{group_by}/{user_id}")
+@router.get("/stats/activity/{date_from}/{date_to}")
 async def get_activity_stats(
     date_from: datetime,
     date_to: datetime,
@@ -66,7 +66,7 @@ async def get_activity_stats(
     return [SUserActivityResponse.model_validate(a) for a in activity]
 
 
-@router.get("/stats/registrations/{date_from}/{date_to}/{group_by}")
+@router.get("/stats/registrations/{date_from}/{date_to}")
 async def get_registrations_stats(
     date_from: datetime,
     date_to: datetime,
@@ -82,7 +82,7 @@ async def get_registrations_stats(
     return [SUserRegistrationsResponse.model_validate(reg) for reg in registrations]
 
 
-@router.get("/stats/metrics/{date_from}/{date_to}/{group_by}")
+@router.get("/stats/metrics/{date_from}/{date_to}")
 async def get_system_metrics(
     date_from: datetime,
     date_to: datetime,
