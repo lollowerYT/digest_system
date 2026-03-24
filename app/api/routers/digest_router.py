@@ -9,6 +9,7 @@ from app.dao.digest import DigestDAO
 from app.database.database import get_session
 from app.database.models.digest import Digest
 from app.database.models.user import User
+from app.exceptions import AudioNotExistsException
 from app.utils.auth.dependencies import get_current_user
 from app.processing.tasks.tasks import generate_digest
 from app.dao.user_channel import UserTelegramChannelDAO
@@ -90,6 +91,9 @@ async def get_digest_audio(
     digest_dao = DigestDAO(session)
     digest = await digest_dao.get_by_id(digest_id)
     audio_path = digest.audio_path
+    if not audio_path:
+        raise AudioNotExistsException()
+    
     #  TODO: доделать после добавления ML сервиса
 
 

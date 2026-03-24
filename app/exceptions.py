@@ -34,4 +34,13 @@ class NotAdminException(DigestSystemException):
     detail = "You don't have enough rights to visit this resource"
 
 class SubscriptionNotExistsException(DigestSystemException):
-    status_code = "You don't have any subsription. Contact the administrator or the developer"
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "You don't have any subsription. Contact the administrator or the developer"
+
+class NegativeTokensAmountException(DigestSystemException):
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = "Tokens can't be negative"
+
+class AudioNotExistsException(DigestSystemException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "Audio doesn't exist"

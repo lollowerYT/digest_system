@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers.auth_router import router as auth_router
 from app.api.routers.user_router import router as user_router
+from app.api.routers.admin_router import router as admin_router
 from app.api.routers.test_router import router as test_router
 from app.api.routers.subscription_router import router as subscription_router
 from app.api.routers.digest_router import router as digest_router
@@ -24,9 +25,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Добавляем middlewares
+app.middleware("http")(log_requests_middleware)
+
+
 # Подключаем все роутеры
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(admin_router)
 app.include_router(subscription_router)
 app.include_router(digest_router)
 app.include_router(favorite_digest_router)

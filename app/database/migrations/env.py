@@ -24,6 +24,8 @@ from app.database.models.news import News
 from app.database.models.channel import TelegramChannel
 from app.database.models.embedding import Embedding
 from app.database.models.embedding_projection import EmbeddingProjection
+from app.database.models.user_channel import UserTelegramChannel
+from app.database.models.request_log import RequestLog
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

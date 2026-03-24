@@ -1,3 +1,4 @@
+from typing import Literal
 from pydantic import BaseModel, ConfigDict
 from uuid import UUID
 
@@ -13,4 +14,6 @@ class SUserProfile(BaseModel):
 
 
 class SUpdateUserTokens(BaseModel):
-    tokens: int
+    amount: int
+    operation: Literal["MANUAL_ADD", "MANUAL_SET"]
+

@@ -65,7 +65,7 @@ class TokenService:
         transaction = TokenTransaction(
             user_id=user.id,
             amount=delta,
-            type=reason
+            description=reason
         )
 
         session.add(transaction)
