@@ -24,9 +24,8 @@ async def add_digest(
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    required_tokens = 5 if data.output_format == 'audio' else 1
-    if user.token_balance < required_tokens:
-        raise HTTPException(status_code=402, detail=f"Insufficient tokens. Need {required_tokens} tokens for {data.output_format} format.")
+    if user.token_balance <= 0:
+        raise HTTPException(status_code=402, detail="Insufficient tokens")
 
     # Если каналы не указаны, подгружаем из БД
     if not data.channels or len(data.channels) == 0:
@@ -50,6 +49,10 @@ async def add_digest(
     await session.refresh(digest)
 
     request_data = data.model_dump()
+    # Гарантируем наличие ключа 'channels'
+    if 'channels' not in request_data or request_data['channels'] is None:
+        request_data['channels'] = data.channels if data.channels else []
+
     # Преобразуем даты в строки
     request_data['date_from'] = request_data['date_from'].isoformat()
     request_data['date_to'] = request_data['date_to'].isoformat()

@@ -26,7 +26,7 @@ app.add_middleware(
 )
 
 # Добавляем middlewares
-app.middleware("http")(log_requests_middleware)
+#app.middleware("http")(log_requests_middleware)
 
 
 # Подключаем все роутеры

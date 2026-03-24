@@ -163,19 +163,20 @@ async def confirm_format(callback: CallbackQuery, state: FSMContext, session: As
     digest_dao = DigestDAO(session)
     digest = await digest_dao.create(
         user_id=user.id,
-        filter_query=f"{user_data.get('news_filter')}",
-        date_from=today,
-        date_to=day_search_for,
+        filter_query={user_data.get('news_filter')} if user_data.get('news_filter') else None,
+        date_from=day_search_for,
+        date_to=today,
         cluster_count=user_data.get('clusters')
     )
     await session.commit()
 
     request_data = {
-        "date_from": digest.date_from.strftime('%d.%m.%Y'),
-        "date_to": digest.date_to.strftime('%d.%m.%Y'),
+        "date_from": digest.date_from.strftime('%Y-%m-%d'),
+        "date_to": digest.date_to.strftime('%Y-%m-%d'),
         "filter_query": digest.filter_query,
         "cluster_count": digest.cluster_count,
-        "formats": formats
+        "formats": formats,
+        "chat_id": callback.message.chat.id 
     }
 
     task = generate_digest.delay(
@@ -183,15 +184,19 @@ async def confirm_format(callback: CallbackQuery, state: FSMContext, session: As
             digest_id=str(digest.id),
             request_data=request_data
     )
-
+    
     await callback.message.answer(
-        f"<b>{digest.title}</b>\n\n"
-        f"{digest.summary_text}\n"
-        f"Период поиска: {digest.date_from.strftime('%d.%m.%Y')} – {digest.date_to.strftime('%d.%m.%Y')}\n"
-        f"Дата создания: {digest.created_at.strftime('%d.%m.%Y')}",
-        parse_mode="HTML",
-        reply_markup=add_to_favorites(digest.id)
+        "⏳ Ваш дайджест обрабатывается. Как только он будет готов, я пришлю его сюда."
     )
+    
+    # await callback.message.answer(
+    #     f"<b>{digest.title}</b>\n\n"
+    #     f"{digest.summary_text}\n"
+    #     f"Период поиска: {digest.date_from.strftime('%d.%m.%Y')} – {digest.date_to.strftime('%d.%m.%Y')}\n"
+    #     f"Дата создания: {digest.created_at.strftime('%d.%m.%Y')}",
+    #     parse_mode="HTML",
+    #     reply_markup=add_to_favorites(digest.id)
+    # )
 
     await state.clear()
     await callback.answer()

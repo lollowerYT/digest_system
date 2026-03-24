@@ -5,8 +5,12 @@ from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
-from dispatcher import setup_dispatcher
+from app.bot.dispatcher import setup_dispatcher
 from app.config import settings
+import sys
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

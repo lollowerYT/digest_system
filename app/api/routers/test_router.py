@@ -22,7 +22,7 @@ async def index():
 
     <!-- Telegram Login Widget -->
     <script async src="https://telegram.org/js/telegram-widget.js?22"
-            data-telegram-login="ru_news_manager_bot"
+            data-telegram-login="Digest_Newsbot"
             data-size="large"
             data-userpic="false"
             data-request-access="write"
@@ -34,7 +34,7 @@ async def index():
             console.log("Telegram user:", user);
 
             try {
-                const response = await fetch("https://equivalently-arciform-marion.ngrok-free.dev/auth/telegram", {
+                const response = await fetch("/auth/telegram", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

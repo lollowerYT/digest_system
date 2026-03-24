@@ -3,6 +3,9 @@ import uuid
 import json
 import logging
 import numpy as np
+from aiogram import Bot
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from app.config import settings
 from datetime import datetime
 from typing import Dict, Any, List
 from celery import chain
@@ -11,6 +14,7 @@ from app.config import settings
 from app.database.models.digest import Digest
 from app.database.models.query_history import QueryHistory
 from app.database.models.channel import TelegramChannel
+from app.database.models.user_channel import UserTelegramChannel
 from app.database.models.token_transaction import TokenTransaction
 from app.database.models.news import News
 from app.database.models.user import User
@@ -18,6 +22,7 @@ from app.database.models.cluster import Cluster
 from app.database.models.embedding import Embedding
 from app.database.database import async_session_maker
 from sqlalchemy import select
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +64,7 @@ def _init_services():
     
     _embedder = QwenEmbedder(
         model_name="Qwen/Qwen3-Embedding-0.6B",
-        device="cuda",          # используем CPU для экономии памяти
+        device="cpu",          # используем CPU для экономии памяти
         embedding_dim=1024
     )
     
@@ -108,17 +113,20 @@ async def _generate_digest_async(
 ):
     global _collector, _embedder, _embedding_service, _clustering_service
     global _summarization_service, _tts_service
-    
+    print(request_data)
     logger.info(f"🚀 Начало обработки дайджеста {digest_id} для пользователя {user_id}")
-    logger.info(f"📋 Параметры: каналы={request_data['channels']}, "
-                f"даты={request_data['date_from']}..{request_data['date_to']}, "
-                f"кластеров={request_data['n_clusters']}, "
-                f"формат={request_data['output_format']}")
+    logger.info(f"📋 Параметры: каналы={request_data.get('channels')}, "
+                f"даты={request_data.get('date_from')}..{request_data.get('date_to')}, "
+                f"кластеров={request_data.get('n_clusters')}, "
+                f"формат={request_data.get('output_format')}")
     
+
     # 1. Получаем каналы из БД
     async with async_session_maker() as session:
-        stmt = select(TelegramChannel).where(
-            TelegramChannel.username.in_(request_data['channels'])
+        stmt = (
+            select(TelegramChannel)
+            .join(UserTelegramChannel, UserTelegramChannel.channel_id == TelegramChannel.id)
+            .where(TelegramChannel.is_active == True, UserTelegramChannel.user_id == user_id)
         )
         result = await session.execute(stmt)
         channels = result.scalars().all()
@@ -126,26 +134,25 @@ async def _generate_digest_async(
         if not channels:
             logger.warning(f"⚠️ Нет активных каналов для дайджеста {digest_id}")
             return {"digest_id": str(digest_id), "status": "no_active_channels"}
-
     # 2. Сбор новостей (парсинг + загрузка всех из БД)
     date_from = datetime.fromisoformat(request_data['date_from'])
     date_to = datetime.fromisoformat(request_data['date_to'])
     logger.info(f"🕒 Начинаем сбор новостей с {date_from} по {date_to}")
 
     # Сначала парсим и сохраняем новые сообщения (если есть)
-    await _collector.collect_news_for_channels(channels, date_from)
+    news_items = await _collector.collect_news_for_channels(channels, date_from)
 
     # Теперь загружаем все сообщения за период из БД
-    async with async_session_maker() as session:
-        stmt = (
-            select(News)
-            .where(News.channel_id.in_([c.id for c in channels]))
-            .where(News.published_at >= date_from)
-            .where(News.published_at <= date_to)
-        )
-        result = await session.execute(stmt)
-        news_items = result.scalars().all()
-        logger.info(f"📰 Всего новостей за период: {len(news_items)}")
+    # async with async_session_maker() as session:
+    #     stmt = (
+    #         select(News)
+    #         .where(News.channel_id.in_([c.id for c in channels]))
+    #         .where(News.published_at >= date_from)
+    #         .where(News.published_at <= date_to)
+    #     )
+    #     result = await session.execute(stmt)
+    #     news_items = result.scalars().all()
+    logger.info(f"📰 Всего новостей за период: {len(news_items)}")
 
     if not news_items:
         logger.warning(f"⚠️ Новостей не найдено для дайджеста {digest_id}")
@@ -214,7 +221,7 @@ async def _generate_digest_async(
             return {"digest_id": str(digest_id), "status": "no_news_after_semantic_filter"}
 
     # 8. Кластеризация
-    n_clusters = min(request_data['n_clusters'], len(news_ids))
+    n_clusters = min(request_data.get('cluster_count'), len(news_ids))
     logger.info(f"🔢 Кластеризация {len(news_ids)} новостей на {n_clusters} кластеров")
     clusters = await _clustering_service.perform_clustering(digest_id, news_ids, n_clusters)
     if not clusters:
@@ -228,13 +235,13 @@ async def _generate_digest_async(
     logger.info(f"✅ Суммаризация завершена")
 
     # 10. Сборка текста дайджеста
-    digest_text = await build_digest_text(digest_id)
+    digest_text = await build_digest_text(digest_id)   # только собирает текст из БД
     await update_digest_text(digest_id, digest_text)
     logger.info(f"📄 Текст дайджеста сформирован (длина {len(digest_text)} символов)")
 
     # 11. Генерация аудио
     audio_path = None
-    if request_data['output_format'] == 'audio' and digest_text:
+    if 'audio' in request_data.get('formats', []) and digest_text:
         logger.info(f"🔊 Генерация аудио для дайджеста {digest_id}, текст: {len(digest_text)} символов")
         try:
             audio_path = await _tts_service.generate_audio(digest_id, digest_text)
@@ -246,22 +253,58 @@ async def _generate_digest_async(
             logger.error(f"❌ Исключение при генерации аудио: {e}", exc_info=True)
             audio_path = None
 
-    # 12. Списание токенов (разная стоимость для текста и аудио)
-    token_cost = 5 if request_data['output_format'] == 'audio' else 1
-    await deduct_tokens(user_id, token_cost, f"Дайджест {digest_id} (формат {request_data['output_format']})")
-    logger.info(f"💰 Списано {token_cost} токенов у пользователя {user_id} за дайджест в формате {request_data['output_format']}")
+    # 12. Списание токенов
+    token_cost = 5 if 'audio' in request_data.get('formats', []) else 1
+    await deduct_tokens(user_id, token_cost, f"Дайджест {digest_id} (формат {request_data.get('formats')})")
+    logger.info(f"💰 Списано {token_cost} токенов у пользователя {user_id}")
 
     # 13. Сохранение в историю
     await save_query_history(user_id, digest_id, request_data)
     logger.info(f"📜 История запроса сохранена")
 
-    logger.info(f"🎉 Дайджест {digest_id} успешно обработан")
-    return {
-        "digest_id": str(digest_id),
-        "status": "completed",
-        "audio_path": audio_path
-    }
-
+    # 14. Отправка результата в Telegram (если есть chat_id)
+    if 'chat_id' in request_data:
+        try:
+            bot = Bot(token=settings.BOT_TOKEN)
+            # Получаем список кластеров для этого дайджеста
+            async with async_session_maker() as session:
+                stmt = select(Cluster).where(Cluster.digest_id == digest_id).order_by(Cluster.created_at)
+                clusters = (await session.execute(stmt)).scalars().all()
+            
+            # Отправляем приветственное сообщение
+            await bot.send_message(
+                chat_id=request_data['chat_id'],
+                text="📰 *Ваш дайджест готов!*",
+                parse_mode="Markdown"
+            )
+            
+            # Отправляем каждый кластер отдельным сообщением
+            for cluster in clusters:
+                if cluster.title and cluster.summary_text:
+                    message_text = f"📌 *{cluster.title}*\n\n{cluster.summary_text}"
+                    # Если текст кластера слишком длинный, обрезаем до 4000 символов (с запасом)
+                    if len(message_text) > 4000:
+                        message_text = message_text[:4000] + "...\n(обрезано)"
+                    await bot.send_message(
+                        chat_id=request_data['chat_id'],
+                        text=message_text,
+                        parse_mode="Markdown"
+                    )
+                    # Небольшая пауза, чтобы не превысить лимит частоты отправки
+                    await asyncio.sleep(0.5)
+            
+            # Если есть аудио, отправляем отдельным файлом
+            if audio_path:
+                with open(audio_path, 'rb') as audio_file:
+                    await bot.send_audio(
+                        chat_id=request_data['chat_id'],
+                        audio=audio_file,
+                        caption="🎧 Аудио-версия дайджеста"
+                    )
+            await bot.session.close()
+        except Exception as e:
+            logger.error(f"Не удалось отправить сообщение пользователю: {e}")
+    
 
 async def build_digest_text(digest_id: uuid.UUID) -> str:
     async with async_session_maker() as session:
