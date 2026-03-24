@@ -18,7 +18,7 @@ class SDigest(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 class SDigestCreate(BaseModel):
-    channels: List[str]
+    channels: Optional[List[str]] = None
     date_from: date
     date_to: date
     filter_query: Optional[str] = None

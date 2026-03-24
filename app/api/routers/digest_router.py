@@ -11,6 +11,7 @@ from app.database.models.digest import Digest
 from app.database.models.user import User
 from app.utils.auth.dependencies import get_current_user
 from app.processing.tasks.tasks import generate_digest
+from app.dao.user_channel import UserTelegramChannelDAO
 
 
 router = APIRouter(prefix="/digests", tags=["digests"])
@@ -18,12 +19,21 @@ router = APIRouter(prefix="/digests", tags=["digests"])
 
 @router.post("/")
 async def add_digest(
-    data: SDigestCreate,   # схему нужно создать
+    data: SDigestCreate,
     user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    if user.token_balance <= 0:
-        raise HTTPException(status_code=402, detail="Insufficient tokens")
+    required_tokens = 5 if data.output_format == 'audio' else 1
+    if user.token_balance < required_tokens:
+        raise HTTPException(status_code=402, detail=f"Insufficient tokens. Need {required_tokens} tokens for {data.output_format} format.")
+
+    # Если каналы не указаны, подгружаем из БД
+    if not data.channels or len(data.channels) == 0:
+        user_channel_dao = UserTelegramChannelDAO(session)
+        channels = await user_channel_dao.get_user_channels(user.id)
+        if not channels:
+            raise HTTPException(status_code=400, detail="No channels added. Please add channels first.")
+        data.channels = [c.username for c in channels]  # username = ссылка на канал
 
     digest = Digest(
         user_id=user.id,
