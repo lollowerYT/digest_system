@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers.auth_router import router as auth_router
 from app.api.routers.user_router import router as user_router
 from app.api.routers.test_router import router as test_router
@@ -12,6 +12,17 @@ from app.api.routers.channel_router import router as channel_router
 
 app = FastAPI() # Создаем экземпляр приложения
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://wilmer-untransitional-unhandily.ngrok-free.dev"
+    ],
+    expose_headers=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Подключаем все роутеры
 app.include_router(auth_router)

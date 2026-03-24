@@ -13,6 +13,8 @@ from app.dao.digest import DigestDAO
 from app.dao.favorite_digest import FavoriteDigestDAO
 from app.dao.query_history import QueryHistoryDAO
 from app.database.models import User
+from app.processing.tasks.tasks import generate_digest
+
 
 router = Router()
 
@@ -158,12 +160,9 @@ async def confirm_format(callback: CallbackQuery, state: FSMContext, session: As
         reply_markup=ReplyKeyboardRemove()
     )
 
-    # TODO: Отправка задачи в Celery
     digest_dao = DigestDAO(session)
     digest = await digest_dao.create(
         user_id=user.id,
-        title="Без названия",
-        summary_text="Бла-бла-бла",
         filter_query=f"{user_data.get('news_filter')}",
         date_from=today,
         date_to=day_search_for,
@@ -171,8 +170,7 @@ async def confirm_format(callback: CallbackQuery, state: FSMContext, session: As
     )
     await session.commit()
 
-
-    query_params = {
+    request_data = {
         "date_from": digest.date_from.strftime('%d.%m.%Y'),
         "date_to": digest.date_to.strftime('%d.%m.%Y'),
         "filter_query": digest.filter_query,
@@ -180,13 +178,11 @@ async def confirm_format(callback: CallbackQuery, state: FSMContext, session: As
         "formats": formats
     }
 
-    query_history_dao = QueryHistoryDAO(session)
-    await query_history_dao.create(
-        user_id=user.id,
-        digest_id=digest.id,
-        query_params=json.dumps(query_params, ensure_ascii=False)
+    task = generate_digest.delay(
+            user_id=str(user.id),
+            digest_id=str(digest.id),
+            request_data=request_data
     )
-    await session.commit()
 
     await callback.message.answer(
         f"<b>{digest.title}</b>\n\n"

@@ -1,13 +1,15 @@
 from aiogram import Dispatcher
-from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.fsm.storage.redis import RedisStorage
 from app.bot.middlewares.auth import AuthMiddleware
 from app.bot.middlewares.database import DatabaseSessionMiddleware
 from app.bot.handlers import *
 from app.database.database import async_session_maker
+from app.config import settings
+
+REDIS_URL = settings.REDIS_URL
 
 def setup_dispatcher() -> Dispatcher:
-    # TODO: Переделать под Redis
-    storage = MemoryStorage()
+    storage = RedisStorage.from_url(REDIS_URL)
     dp = Dispatcher(storage=storage)
 
     dp.include_router(start.router)
