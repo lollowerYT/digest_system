@@ -10,8 +10,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 REDIS_URL = settings.REDIS_URL
 
 def setup_dispatcher() -> Dispatcher:
-    #storage = RedisStorage.from_url(REDIS_URL)
-    storage = MemoryStorage()
+    storage = RedisStorage.from_url(REDIS_URL)
+    #storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 
     dp.include_router(start.router)
@@ -19,7 +19,7 @@ def setup_dispatcher() -> Dispatcher:
     dp.include_router(channels.router)
     dp.include_router(digest.router)
     dp.include_router(favorites.router)
-    #dp.include_router(admin.router)
+    dp.include_router(admin.router)
 
     dp.update.middleware(AuthMiddleware())
     dp.update.middleware(DatabaseSessionMiddleware(session_pool=async_session_maker))

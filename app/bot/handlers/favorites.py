@@ -12,6 +12,7 @@ router = Router()
 
 @router.callback_query(F.data == "menu_favorites")
 async def show_favorites(callback: CallbackQuery, session: AsyncSession, user: User):
+    # TODO: Переделать под инлайн кнопки, добавить возможность удалить из БД
     results = []
 
     fav_digest_dao = FavoriteDigestDAO(session)
