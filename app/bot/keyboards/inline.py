@@ -23,7 +23,7 @@ def profile_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="💰 Поменять тариф", callback_data="subsription_change")
     builder.button(text="📜 История запросов", callback_data="profile_history")
-    builder.button(text="◀️ Назад", callback_data="menu_main")
+    builder.button(text="⬅️ В меню", callback_data="menu_main")
     builder.adjust(2, 1)
     return builder.as_markup(resize_keyboard=True)
 
@@ -32,7 +32,7 @@ def channels_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="➕ Добавить канал", callback_data="channel_add")
     builder.button(text="➖ Удалить канал", callback_data="channel_remove")
-    builder.button(text="◀️ Назад", callback_data="menu_main")
+    builder.button(text="⬅️ В меню", callback_data="menu_main")
     builder.adjust(2, 1)
     return builder.as_markup(resize_keyboard=True)
 
@@ -82,6 +82,17 @@ def digest_menu(selected_formats: list[str]) -> InlineKeyboardMarkup:
 def add_to_favorites(digest_id: uuid.UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="⭐ Добавить в избранное", callback_data=f"add_digest_{digest_id}")
-    builder.button(text="➡️ В меню", callback_data="menu_main")
+    builder.button(text="⬅️ В меню", callback_data="menu_main")
     builder.adjust(1, 1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def admin_menu() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🪙 Поменять кол-во токенов", callback_data="tokens_change")
+    builder.button(text="📊 Посмотреть график регистраций", callback_data="log_in_chart")
+    builder.button(text="📊 Посмотреть график активности", callback_data="activity_chart")
+    builder.button(text="📊 Посмотреть метрики", callback_data="metrics_chart")
+    builder.button(text="⬅️ В меню", callback_data="menu_main")
+    builder.adjust(2, 2, 1)
     return builder.as_markup(resize_keyboard=True)

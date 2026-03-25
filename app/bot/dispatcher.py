@@ -3,6 +3,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 from app.bot.middlewares.auth import AuthMiddleware
 from app.bot.middlewares.database import DatabaseSessionMiddleware
 from app.bot.handlers import *
+from app.bot.middlewares.logger import LoggingMiddleware
 from app.database.database import async_session_maker
 from app.config import settings
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -19,9 +20,10 @@ def setup_dispatcher() -> Dispatcher:
     dp.include_router(channels.router)
     dp.include_router(digest.router)
     dp.include_router(favorites.router)
-    #dp.include_router(admin.router)
+    dp.include_router(admin.router)
 
     dp.update.middleware(AuthMiddleware())
+    dp.update.middleware(LoggingMiddleware(session_pool=async_session_maker))
     dp.update.middleware(DatabaseSessionMiddleware(session_pool=async_session_maker))
 
     return dp

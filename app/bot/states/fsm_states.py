@@ -10,3 +10,9 @@ class DigestCreation(StatesGroup):
 
 class ChannelManagement(StatesGroup):
     waiting_for_url = State()
+
+
+class AdminManagement(StatesGroup):
+    waiting_for_user_id = State()
+    waiting_for_date_period = State()
+    waiting_for_tokens_amount = State()

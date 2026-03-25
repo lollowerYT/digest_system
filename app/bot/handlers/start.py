@@ -1,8 +1,12 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.bot.keyboards.inline import main_menu
+from app.dao.request_log import RequestLogDAO
 from app.database.models import User
+
 
 router = Router()
 
