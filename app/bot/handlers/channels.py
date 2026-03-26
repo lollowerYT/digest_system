@@ -50,12 +50,16 @@ async def process_channel_url(message: Message, state: FSMContext, session: Asyn
             continue
 
         username = match.group(1)
-
+        print(username)
+        
         try:
             current_channel = await channel_dao.get_one_or_none(username=username)
 
             if current_channel:
                 user_channel_existing = await user_channel_dao.get_one_or_none(user_id=user.id, channel_id=current_channel.id)
+                print(f"user_channel_existing: {user_channel_existing}\n"
+                      f"user.id: {user.id}\n"
+                      f"current_channel.id: {current_channel.id}\n")
                 if user_channel_existing:
                     results.append(f"ℹ️ @{username} уже есть в списке")
                     continue
@@ -67,7 +71,6 @@ async def process_channel_url(message: Message, state: FSMContext, session: Asyn
                 await session.commit()
                 results.append(f"✅ {current_channel.name}")
             else:
-                # Получаем информацию о канале через Telegram API
                 chat = await bot.get_chat(f"@{username}")
 
                 new_channel = await channel_dao.create(
