@@ -19,8 +19,7 @@ app = FastAPI() # Создаем экземпляр приложения
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",
-        "https://wilmer-untransitional-unhandily.ngrok-free.dev"
+        "https://overmasterful-aerologic-katelynn.ngrok-free.dev"
     ],
     expose_headers=["*"],
     allow_credentials=True,
@@ -29,7 +28,7 @@ app.add_middleware(
 )
 
 # Добавляем middlewares
-#app.middleware("http")(log_requests_middleware)
+app.middleware("https")(log_requests_middleware)
 
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

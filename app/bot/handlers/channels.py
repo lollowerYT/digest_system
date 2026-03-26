@@ -50,15 +50,14 @@ async def process_channel_url(message: Message, state: FSMContext, session: Asyn
             continue
 
         username = match.group(1)
-
+        print(username)
+        
         try:
             current_channel = await channel_dao.get_one_or_none(username=username)
 
             if current_channel:
                 user_channel_existing = await user_channel_dao.get_one_or_none(user_id=user.id, channel_id=current_channel.id)
-                print(f"user_channel_existing: {user_channel_existing}\n"
-                      f"user.id: {user.id}\n"
-                      f"current_channel.id: {current_channel.id}\n")
+
                 if user_channel_existing:
                     results.append(f"ℹ️ @{username} уже есть в списке")
                     continue
@@ -70,7 +69,6 @@ async def process_channel_url(message: Message, state: FSMContext, session: Asyn
                 await session.commit()
                 results.append(f"✅ {current_channel.name}")
             else:
-                # Получаем информацию о канале через Telegram API
                 chat = await bot.get_chat(f"@{username}")
 
                 new_channel = await channel_dao.create(
@@ -92,7 +90,7 @@ async def process_channel_url(message: Message, state: FSMContext, session: Asyn
             results.append(f"❌ Ошибка с {url}: Канал не найден или нет доступа")
             await session.rollback()
 
-    channels = [f"{channel.name} (@{channel.username})" for channel in await channel_dao.get_all()]
+    channels = [f"{channel.name} (@{channel.username})" for channel in await user_channel_dao.get_user_channels(user.id)]
 
     await message.answer("\n".join(channels + results) if results else "Ничего не добавлено", reply_markup=channels_menu())
     await state.clear()

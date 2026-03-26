@@ -5,7 +5,7 @@ from typing import Optional
 class STelegramAuthData(BaseModel):
     id: int
     first_name: str
-    lastname: Optional[str] = None
+    last_name: Optional[str] = None
     username: Optional[str] = None
     photo_url: Optional[str] = None
     auth_date: int

@@ -19,7 +19,7 @@ from app.utils.admin.dependencies import get_admin
 router = APIRouter(
     prefix="/admin",
     tags=["admin"],
-    # dependencies=[Depends(get_admin)]
+    dependencies=[Depends(get_admin)]
 )
 
 

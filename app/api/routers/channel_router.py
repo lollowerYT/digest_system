@@ -12,6 +12,7 @@ from app.utils.auth.dependencies import get_current_user
 from app.api.dependencies import get_collector
 from app.processing.services.telegram_collector import TelegramCollector
 
+import traceback
 
 router = APIRouter(prefix="/channels", tags=["channels"])
 
@@ -37,6 +38,7 @@ async def add_user_channel(
     try:
         entity = await collector.get_entity(data.link)
     except Exception:
+        traceback.print_exc()
         raise HTTPException(status_code=404, detail="Channel not found")
 
     # 2. Находим или создаём канал в БД

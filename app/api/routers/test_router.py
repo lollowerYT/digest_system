@@ -22,7 +22,7 @@ async def index():
 
     <!-- Telegram Login Widget -->
     <script async src="https://telegram.org/js/telegram-widget.js?22"
-            data-telegram-login="Digest_Newsbot"
+            data-telegram-login="ru_news_manager_bot"
             data-size="large"
             data-userpic="false"
             data-request-access="write"
