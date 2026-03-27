@@ -78,7 +78,7 @@ async def delete_user_channel(
     session: AsyncSession = Depends(get_session)
 ) -> STelegramChannel:
     user_channel_dao = UserTelegramChannelDAO(session)
-    deleted_channel = await user_channel_dao.delete(user_id=user.id, channel_id=channel_id)
+    deleted_channel = (await user_channel_dao.delete(user_id=user.id, channel_id=channel_id))[0]
     await session.commit()
     return STelegramChannel.model_validate(deleted_channel)
 
