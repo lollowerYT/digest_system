@@ -1,5 +1,6 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.cluster import SCluster
@@ -9,10 +10,11 @@ from app.dao.digest import DigestDAO
 from app.database.database import get_session
 from app.database.models.digest import Digest
 from app.database.models.user import User
-from app.exceptions import AudioNotExistsException
+from app.exceptions import AudioNotExistsException, DigestNotExistsException
 from app.utils.auth.dependencies import get_current_user
 from app.processing.tasks.tasks import generate_digest
 from app.dao.user_channel import UserTelegramChannelDAO
+from app.config import settings
 
 
 router = APIRouter(prefix="/digests", tags=["digests"])
@@ -94,11 +96,24 @@ async def get_digest_audio(
 ):
     digest_dao = DigestDAO(session)
     digest = await digest_dao.get_by_id(digest_id)
-    audio_path = digest.audio_path
-    if not audio_path:
+    
+    if not digest:
+        raise DigestNotExistsException()
+    
+    if not digest.audio_path:
         raise AudioNotExistsException()
     
-    #  TODO: доделать после добавления ML сервиса
+    # Полный относительный путь до аудиофайла
+    audio_file_path = settings.audio_path / digest.audio_path 
+    
+    if not audio_file_path.exists():
+        raise AudioNotExistsException()
+    
+    return FileResponse(
+        path=audio_file_path,
+        media_type="audio/wav",
+        filename=audio_file_path.name
+    )
 
 
 @router.get("/{digest_id}/clusters")

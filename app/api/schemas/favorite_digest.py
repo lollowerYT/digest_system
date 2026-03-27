@@ -1,11 +1,12 @@
 from datetime import date, datetime
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional, Literal
 
 
-class SDigest(BaseModel):
+class SFavoriteDigestData(BaseModel):
     id: UUID
+    digest_id: UUID
     user_id: UUID
     title: Optional[str] = None
     summary_text: Optional[str] = None
@@ -19,10 +20,10 @@ class SDigest(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class SDigestCreate(BaseModel):
-    channels: Optional[List[str]] = None
-    date_from: date
-    date_to: date
-    filter_query: Optional[str] = None
-    n_clusters: int
-    output_format: Literal["text", "audio"] = "text"
+class SFavoriteDigest(BaseModel):
+    id: UUID
+    digest_id: UUID
+    user_id: UUID
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

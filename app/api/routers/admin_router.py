@@ -111,6 +111,8 @@ async def get_system_metrics(
     return [SSystemMetricsResponse.model_validate(m) for m in metrics]
 
 
+
+# Тестовый эндпоинт с метриками
 from fastapi.responses import FileResponse
 
 @router.get("/dashboard")

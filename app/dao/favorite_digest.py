@@ -13,10 +13,23 @@ class FavoriteDigestDAO(BaseDAO):
 
     async def get_user_favorite_digests(self, user_id: UUID | str):
         stmt = (
-            select(Digest)
+            select(
+                FavoriteDigest.id.label("id"),
+                FavoriteDigest.digest_id,
+                FavoriteDigest.user_id,
+
+                Digest.title,
+                Digest.summary_text,
+                Digest.filter_query,
+                Digest.date_from,
+                Digest.date_to,
+                Digest.cluster_count,
+                Digest.audio_path,
+                Digest.created_at,
+            )
             .join(FavoriteDigest, FavoriteDigest.digest_id == Digest.id)
             .where(FavoriteDigest.user_id == user_id)
         )
         
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        return result.mappings().all()
