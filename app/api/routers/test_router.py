@@ -46,3 +46,4 @@ async def index():
     </body>
     </html>
     """
+    return html
