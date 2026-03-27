@@ -7,7 +7,7 @@ from app.dao.digest import DigestDAO
 from app.dao.favorite_digest import FavoriteDigestDAO
 from app.database.database import get_session
 from app.database.models.user import User
-from app.exceptions import DigestNotExistsException
+from app.exceptions import DigestAlreadyExistsException, DigestNotExistsException
 from app.utils.auth.dependencies import get_current_user
 from app.utils.digest_schema_creators import build_favorite_digest_schema
 
@@ -37,6 +37,11 @@ async def add_favorite_digest(
         raise DigestNotExistsException()
     
     favorite_dao = FavoriteDigestDAO(session)
+    
+    existed_favorite = await favorite_dao.get_one_or_none(digest_id=digest_id, user_id=user.id)
+    if existed_favorite:
+        raise DigestAlreadyExistsException()
+    
     new_favorite = await favorite_dao.create(
         user_id=user.id,
         digest_id=digest_id,

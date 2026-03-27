@@ -45,6 +45,12 @@ class DigestNotExistsException(DigestSystemException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "Digest doesn't exist"
 
+class DigestAlreadyExistsException(DigestSystemException):
+    status_code = status.HTTP_403_FORBIDDEN
+    detail = "Digest already exists"
+
 class AudioNotExistsException(DigestSystemException):
     status_code = status.HTTP_403_FORBIDDEN
     detail = "Audio doesn't exist"
+
+
