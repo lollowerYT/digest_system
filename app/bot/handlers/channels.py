@@ -92,13 +92,9 @@ async def process_channel_url(message: Message, state: FSMContext, session: Asyn
             results.append(f"❌ Ошибка с {url}: Канал не найден или нет доступа")
             await session.rollback()
 
-    # Получаем ТОЛЬКО каналы пользователя
-    user_channels = await user_channel_dao.get_user_channels(user.id)
-    channels_list = [f"{channel.name} ({channel.username})" for channel in user_channels]
+    channels = [f"{channel.name} (@{channel.username})" for channel in await user_channel_dao.get_user_channels(user.id)]
 
-    # Формируем ответ
-    response = "\n".join(channels_list + results) if results else "\n".join(channels_list)
-    await message.answer(response, reply_markup=channels_menu())
+    await message.answer("\n".join(channels + results) if results else "Ничего не добавлено", reply_markup=channels_menu())
     await state.clear()
 
 

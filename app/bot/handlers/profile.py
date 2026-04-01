@@ -17,11 +17,11 @@ router = Router()
 async def show_profile(callback: CallbackQuery, session: AsyncSession, user: User):
     display_name = user.first_name or "Неизвестно"
     role_name = "Администратор" if user.role.value == "ADMIN" else "Пользователь"
-    subscription = None
-    if user.subscription_id:
-        subscription_dao = SubscriptionDAO(session)
-        subscription = await subscription_dao.get_by_id(user.subscription_id)
+
+    subscription_dao = SubscriptionDAO(session)
+    subscription = await subscription_dao.get_one_or_none()
     subscription_name = subscription.name if subscription else "Отсутствует"
+
     text = (
         "👤 <b>Личный кабинет</b>\n\n"
         f"<b>Имя:</b> {display_name}\n"
@@ -30,6 +30,7 @@ async def show_profile(callback: CallbackQuery, session: AsyncSession, user: Use
         f"<b>Доступно токенов:</b> {user.token_balance}\n\n"
         f"<b>Дата регистрации:</b> {user.created_at.strftime('%d.%m.%Y')}"
     )
+
     await callback.message.edit_text(
         text,
         reply_markup=profile_menu(),
@@ -56,16 +57,12 @@ async def show_history(callback: CallbackQuery, session: AsyncSession, user: Use
         return
 
     # Собираем уникальные digest_id и загружаем дайджесты
-    digest_ids = list({query.digest_id for query in queries})
+    digest_ids = [query.digest_id for query in queries]
     digests = []
     for d_id in digest_ids:
         digest = await digest_dao.get_by_id(d_id)
         if digest:
             digests.append(digest)
-
-    if not digests:
-        await callback.answer("История пуста")
-        return
 
     # Сортируем по дате создания (от новых к старым)
     digests.sort(key=lambda d: d.created_at, reverse=True)

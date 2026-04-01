@@ -2,13 +2,12 @@ import io
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, BufferedInputFile
+from aiogram.types import Message, CallbackQuery, BufferedInputFile
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback
 
-from app.bot.keyboards.inline import admin_menu
+from app.bot.keyboards.inline import admin_menu, date_range_keyboard, token_menu
 from app.bot.states.fsm_states import AdminManagement
 from app.dao.query_history import QueryHistoryDAO
 from app.dao.request_log import RequestLogDAO
@@ -16,22 +15,7 @@ from app.dao.user import UserDAO
 
 router = Router()
 
-# ----------------------------------------------------------------------
-# Клавиатура с быстрыми диапазонами
-# ----------------------------------------------------------------------
-def date_range_keyboard() -> InlineKeyboardMarkup:
-    buttons = [
-        [InlineKeyboardButton(text="📅 Последние 7 дней", callback_data="range_7d")],
-        [InlineKeyboardButton(text="📅 Последние 14 дней", callback_data="range_14d")],
-        [InlineKeyboardButton(text="📅 Последний месяц", callback_data="range_month")],
-        [InlineKeyboardButton(text="📆 Ввести вручную", callback_data="range_manual")],
-        [InlineKeyboardButton(text="🔙 Назад", callback_data="menu_admin")]
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
-# ----------------------------------------------------------------------
-# Админ-меню
-# ----------------------------------------------------------------------
 @router.callback_query(F.data == "menu_admin")
 async def show_admin_menu(callback: CallbackQuery):
     await callback.message.edit_text(
@@ -40,9 +24,7 @@ async def show_admin_menu(callback: CallbackQuery):
     )
     await callback.answer()
 
-# ----------------------------------------------------------------------
-# Просмотр всех пользователей
-# ----------------------------------------------------------------------
+
 @router.callback_query(F.data == "all_users")
 async def show_all_users(callback: CallbackQuery, session: AsyncSession):
     user_dao = UserDAO(session)
@@ -65,9 +47,7 @@ async def show_all_users(callback: CallbackQuery, session: AsyncSession):
         await callback.message.answer(text, parse_mode="HTML")
     await callback.answer()
 
-# ----------------------------------------------------------------------
-# Изменение токенов: показываем список пользователей
-# ----------------------------------------------------------------------
+
 @router.callback_query(F.data == "tokens_change")
 async def show_users_for_token_change(callback: CallbackQuery, session: AsyncSession):
     user_dao = UserDAO(session)
@@ -77,14 +57,7 @@ async def show_users_for_token_change(callback: CallbackQuery, session: AsyncSes
         await callback.answer()
         return
 
-    builder = InlineKeyboardBuilder()
-    for user in users:
-        name = user.first_name or user.username or f"ID {user.telegram_id}"
-        text = f"{name} | 🪙 {user.token_balance} токенов"
-        builder.button(text=text, callback_data=f"set_tokens_{user.telegram_id}")
-    builder.adjust(1)
-    builder.row(InlineKeyboardButton(text="🔙 Назад", callback_data="menu_admin"))
-    await callback.message.edit_text("Выберите пользователя для изменения токенов:", reply_markup=builder.as_markup())
+    await callback.message.edit_text("Выберите пользователя для изменения токенов:", reply_markup=token_menu(users))
     await callback.answer()
 
 @router.callback_query(F.data.startswith("set_tokens_"))
@@ -169,6 +142,7 @@ async def process_calendar_selection(
 ):
     calendar = SimpleCalendar()
     selected, date = await calendar.process_selection(callback, callback_data)
+
     if selected:
         data = await state.get_data()
         if data.get("chart_start_pending"):
@@ -202,6 +176,7 @@ async def process_calendar_selection(
     else:
         await callback.answer()
 
+
 async def generate_and_send_chart(message: Message, state: FSMContext, session: AsyncSession, start_date: datetime, end_date: datetime):
     data = await state.get_data()
     chart_type = data.get("chart_type")
@@ -224,9 +199,7 @@ async def generate_and_send_chart(message: Message, state: FSMContext, session: 
     await state.clear()
     await message.answer("Выберите действие:", reply_markup=admin_menu())
 
-# ----------------------------------------------------------------------
-# Функции построения графиков
-# ----------------------------------------------------------------------
+
 async def build_log_in_chart(
         start_date: datetime,
         end_date: datetime,

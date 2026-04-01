@@ -1,6 +1,7 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 
 from app.api.schemas.favorite_digest import SFavoriteDigestData
 from app.dao.digest import DigestDAO
@@ -59,4 +60,8 @@ async def delete_user_favorite_digest(
     favorite_dao = FavoriteDigestDAO(session)
     deleted_favorite = await favorite_dao.delete(user_id=user.id, id=favorite_id)
     await session.commit()
-    return SFavoriteDigestData.model_validate(deleted_favorite)
+    try:
+        model = SFavoriteDigestData.model_validate(deleted_favorite)
+    except ValidationError as e:
+        raise HTTPException(status_code=500)
+    return model
