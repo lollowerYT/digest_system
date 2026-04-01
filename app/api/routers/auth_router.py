@@ -42,6 +42,7 @@ async def telegram_login(
 
     if not validate_auth_date(int(payload["auth_date"])):
         raise AuthorizationExpiredException()
+        
     
     telegram_id = int(payload["id"])
     
@@ -65,6 +66,12 @@ async def telegram_login(
     response.set_cookie(
     "access_token",
     access_token,
-    httponly=True
+    httponly=True,
+    samesite="none",
+    secure=True,
+    domain=".ngrok-free.dev"
     )
-    return {"status": "ok"}
+    return {
+    "access_token": access_token,
+    "token_type": "bearer"
+    }

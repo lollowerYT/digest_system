@@ -163,7 +163,7 @@ async def confirm_format(callback: CallbackQuery, state: FSMContext, session: As
     digest_dao = DigestDAO(session)
     digest = await digest_dao.create(
         user_id=user.id,
-        filter_query={user_data.get('news_filter')} if user_data.get('news_filter') else None,
+        filter_query=user_data.get('news_filter') if user_data.get('news_filter') else None,
         date_from=day_search_for,
         date_to=today,
         cluster_count=user_data.get('clusters')

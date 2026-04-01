@@ -14,11 +14,16 @@ from app.exceptions import (
 from app.utils.time_utils import utc_now
 
 
+from fastapi import Request
+
+from fastapi import Request
+
 def get_token(request: Request):
     token = request.cookies.get("access_token")
-    
+
     if not token:
         raise UserNotAuthenticatedException()
+
     return token
 
 

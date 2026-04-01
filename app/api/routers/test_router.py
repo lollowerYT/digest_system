@@ -29,13 +29,14 @@ async def index():
                 const response = await fetch("/auth/telegram", {{
                     method: "POST",
                     headers: {{ "Content-Type": "application/json" }},
+                    credentials: "include",
                     body: JSON.stringify(user)
                 }});
                 if (!response.ok) {{
                     throw new Error("Ошибка авторизации");
                 }}
                 const data = await response.json();
-                console.log("JWT:", data.access_token);
+                localStorage.setItem("token", data.access_token);
                 alert("Успешный вход!");
             }} catch (error) {{
                 console.error(error);
