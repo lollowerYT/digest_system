@@ -7,6 +7,7 @@ from aiogram.filters.callback_data import CallbackData
 
 def main_menu(user_role: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     builder.button(text="👤 Личный кабинет", callback_data="menu_profile")
     builder.button(text="⭐ Избранное", callback_data="menu_favorites")
     builder.button(text="📰 Сгенерировать дайджест", callback_data="menu_digest")
@@ -16,24 +17,30 @@ def main_menu(user_role: str) -> InlineKeyboardMarkup:
         builder.adjust(2, 2, 1)
     else:
         builder.adjust(2, 2)
+
     return builder.as_markup(resize_keyboard=True, input_field_placeholder="Воспользуйтесь меню:")
 
 
 def profile_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     builder.button(text="💰 Поменять тариф", callback_data="subsription_change")
     builder.button(text="📜 История запросов", callback_data="profile_history")
     builder.button(text="⬅️ В меню", callback_data="menu_main")
+
     builder.adjust(2, 1)
+
     return builder.as_markup(resize_keyboard=True)
 
 
 def channels_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     builder.button(text="➕ Добавить канал", callback_data="channel_add")
     builder.button(text="➖ Удалить канал", callback_data="channel_remove")
     builder.button(text="⬅️ В меню", callback_data="menu_main")
     builder.adjust(2, 1)
+
     return builder.as_markup(resize_keyboard=True)
 
 
@@ -46,7 +53,7 @@ def remove_channels(channels: list, selected_ids: list[uuid.UUID]) -> InlineKeyb
 
     for channel in channels:
         marker = "🗑 " if channel.id in selected_ids else ""
-        text = f"{marker}{channel.name} ({channel.username})"
+        text = f"{marker}{channel.name} (@{channel.username})"
 
         builder.button(
             text=text,
@@ -81,14 +88,17 @@ def digest_menu(selected_formats: list[str]) -> InlineKeyboardMarkup:
 
 def add_to_favorites(digest_id: uuid.UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     builder.button(text="⭐ Добавить в избранное", callback_data=f"add_digest_{digest_id}")
     builder.button(text="⬅️ В меню", callback_data="menu_main")
     builder.adjust(1, 1)
+
     return builder.as_markup(resize_keyboard=True)
 
 
 def admin_menu() -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
+
     builder.button(text="🪙 Поменять кол-во токенов", callback_data="tokens_change")
     builder.button(text="👥 Все пользователи", callback_data="all_users")
     builder.button(text="📊 Посмотреть график регистраций", callback_data="log_in_chart")
@@ -96,4 +106,29 @@ def admin_menu() -> InlineKeyboardMarkup:
     builder.button(text="📊 Посмотреть метрики", callback_data="metrics_chart")
     builder.button(text="⬅️ В меню", callback_data="menu_main")
     builder.adjust(2, 2, 1, 1)
+
+    return builder.as_markup(resize_keyboard=True)
+
+def date_range_keyboard() -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+
+    builder.button(text="📅 Последние 7 дней", callback_data="range_7d")
+    builder.button(text="📅 Последние 14 дней", callback_data="range_14d")
+    builder.button(text="📅 Последний месяц", callback_data="range_month")
+    builder.button(text="📆 Ввести вручную", callback_data="range_manual")
+    builder.button(text="🔙 Назад", callback_data="menu_admin")
+
+    return builder.as_markup(resize_keyboard=True)
+
+
+def token_menu(users) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+
+    for user in users:
+        name = user.first_name or user.username or f"ID {user.telegram_id}"
+        text = f"{name} | 🪙 {user.token_balance} токенов"
+        builder.button(text=text, callback_data=f"set_tokens_{user.telegram_id}")
+
+    builder.row(InlineKeyboardButton(text="🔙 Назад", callback_data="menu_admin"))
+
     return builder.as_markup(resize_keyboard=True)

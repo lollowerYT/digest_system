@@ -1,6 +1,7 @@
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 
 from app.api.schemas.channel import STelegramChannel, SChannelAdd
 from app.dao.channel import TelegramChannelDAO
@@ -92,7 +93,11 @@ async def delete_user_channel(
     # Удаляем связь
     await user_channel_dao.delete(user_id=user.id, channel_id=channel_id)
     await session.commit()
-    return STelegramChannel.model_validate(channel)
+    try:
+        model = STelegramChannel.model_validate(deleted_channel)
+    except ValidationError as e:
+        raise HTTPException(status_code=500)
+    return model
 
 
 @router.get("/channels/all", dependencies=[Depends(get_admin)])

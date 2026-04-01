@@ -63,13 +63,9 @@ async def telegram_login(
         await session.refresh(user)
 
     access_token = create_access_token(user.id)
-    response.set_cookie(
-    "access_token",
-    access_token,
-    httponly=True,
-    samesite="none",
-    secure=True,
-    domain=".ngrok-free.dev"
+    response.headers.append(
+        "Set-Cookie",
+        f"access_token={access_token}; HttpOnly; Secure; SameSite=None; Partitioned"
     )
     return {
     "access_token": access_token,
