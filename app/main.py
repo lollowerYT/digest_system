@@ -19,8 +19,7 @@ app = FastAPI() # Создаем экземпляр приложения
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://overmasterful-aerologic-katelynn.ngrok-free.dev",
-        "http://localhost:5173"
+        "https://overmasterful-aerologic-katelynn.ngrok-free.dev"
     ],
     expose_headers=["*"],
     allow_credentials=True,
